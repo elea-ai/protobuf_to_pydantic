@@ -416,6 +416,9 @@ class FileDescriptorProtoToCode(BaseP2C):
                 pass
 
         is_required = field_info_dict.get("required", None)
+        # Track if user explicitly specified default or default_factory in protobuf comments
+        user_specified_default = field_info_dict.get("default", _pydantic_adapter.PydanticUndefined) is not _pydantic_adapter.PydanticUndefined
+        user_specified_default_factory = field_info_dict.get("default_factory", None) is not None
 
         if (
             field_info_dict
@@ -498,11 +501,13 @@ class FileDescriptorProtoToCode(BaseP2C):
             type_str = f"typing.Optional[{type_str}]"
             if (
                 is_required is not True
-                and field_info_dict.get("default", _pydantic_adapter.PydanticUndefined)
-                is _pydantic_adapter.PydanticUndefined
-                and not field_info_dict.get("default_factory", None)
+                and not user_specified_default
+                and not user_specified_default_factory
             ):
                 field_info_dict["default"] = None
+                # Clear the auto-generated factory
+                field_info_dict.pop("default_factory", None)
+
 
         # arranging  field info parameters
         for key in FieldInfo.__slots__:

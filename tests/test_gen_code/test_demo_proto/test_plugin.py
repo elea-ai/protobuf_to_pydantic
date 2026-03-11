@@ -174,9 +174,9 @@ class OptionalMessage(BaseModel):
     one_of_validator = model_validator(mode="before")(check_one_of)
     x: str = Field(default="")
     y: int = Field(default=0, alias="yy", title="use age", ge=0, example=18)
-    name: typing.Optional[str] = Field(default="")
-    age: typing.Optional[int] = Field(default=0)
-    item: typing.Optional[InvoiceItem] = Field(default_factory=InvoiceItem)
+    name: typing.Optional[str] = Field(default=None)
+    age: typing.Optional[int] = Field(default=None)
+    item: typing.Optional[InvoiceItem] = Field(default=None)
     str_list: typing.List[str] = Field(default_factory=list)
     int_map: "typing.Dict[str, int]" = Field(default_factory=dict)
     default_template_test: float = Field(default=1600000000.0)
@@ -188,14 +188,46 @@ class OptionalMessage(BaseModel):
     one_of_validator = root_validator(pre=True, allow_reuse=True)(check_one_of)
     x: str = Field(default="")
     y: int = Field(default=0, example=18, alias="yy", title="use age", ge=0.0)
-    name: typing.Optional[str] = Field(default="")
-    age: typing.Optional[int] = Field(default=0)
-    item: typing.Optional[InvoiceItem] = Field(default_factory=InvoiceItem)
+    name: typing.Optional[str] = Field(default=None)
+    age: typing.Optional[int] = Field(default=None)
+    item: typing.Optional[InvoiceItem] = Field(default=None)
     str_list: typing.List[str] = Field(default_factory=list)
     int_map: "typing.Dict[str, int]" = Field(default_factory=dict)
     default_template_test: float = Field(default=1600000000.0)
 """
         assert content.strip("\n") in getsource(demo_p2p.OptionalMessage).strip("\n")
+
+    def test_optional_fields_default_to_none(self) -> None:
+        """Test that proto3 optional fields default to None, not empty values or factories"""
+        from protobuf_to_pydantic import msg_to_pydantic_model
+        from protobuf_to_pydantic.gen_model import clear_create_model_cache
+
+        if __version__ > "4.0.0":
+            if is_v1:
+                from example.proto_pydanticv1.example.example_proto.demo import demo_pb2
+            else:
+                from example.proto_pydanticv2.example.example_proto.demo import demo_pb2
+        else:
+            if is_v1:
+                from example.proto_3_20_pydanticv1.example.example_proto.demo import demo_pb2
+            else:
+                from example.proto_3_20_pydanticv2.example.example_proto.demo import demo_pb2
+
+        # Generate fresh model to test the fix (not relying on pre-generated code)
+        clear_create_model_cache()
+        OptionalMessage = msg_to_pydantic_model(demo_pb2.OptionalMessage, parse_msg_desc_method="ignore")
+
+        # Create instance with only required oneof field
+        msg = OptionalMessage(x="test")
+
+        # Proto3 optional fields should be None when not provided
+        assert msg.name is None, f"Optional string field should be None, got {msg.name!r}"
+        assert msg.age is None, f"Optional int field should be None, got {msg.age!r}"
+        assert msg.item is None, f"Optional message field should be None, got {msg.item!r}"
+
+        # Non-optional fields should still have their defaults
+        assert msg.str_list == []
+        assert msg.int_map == {}
 
     def test_after_refer_message(self)->None:
         pass

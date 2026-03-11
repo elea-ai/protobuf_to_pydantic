@@ -105,6 +105,9 @@ class FieldDataClass(object):
     nested_message_dict: Dict[str, Type[Union[BaseModel, IntEnum]]]
     descriptor: Descriptor
     validators: Dict[str, classmethod]
+    # Track if user explicitly specified default values in protobuf comments
+    user_specified_default: bool = False
+    user_specified_default_factory: bool = False
 
 
 CREATE_MODEL_CACHE_T = Dict[Union[str, tuple], Optional[Type[BaseModel]]]
@@ -469,6 +472,9 @@ class M2P(object):
                 )
 
             raw_validator_dict = field_info_dict.get("validator", {})
+            # Track if user explicitly specified default or default_factory in protobuf comments
+            field_dataclass.user_specified_default = field_info_dict.get("default", MISSING).__class__ != MISSING.__class__
+            field_dataclass.user_specified_default_factory = field_info_dict.get("default_factory", None) is not None
             field_info_dict: FieldInfoTypedDict = FieldInfoParamModel(**field_info_dict).dict()  # type: ignore
             field_info_dict.pop("skip")
 
@@ -612,10 +618,12 @@ class M2P(object):
                 field_dataclass.field_type = Optional[field_dataclass.field_type]
                 if (
                     field_dataclass.is_required is not True
-                    and field_info.default is _pydantic_adapter.PydanticUndefined
-                    and field_info.default_factory is None
+                    and not field_dataclass.user_specified_default
+                    and not field_dataclass.user_specified_default_factory
                 ):
                     field_info.default = None
+                    # Clear the auto-generated factory
+                    field_info.default_factory = None
             annotation_dict[field_dataclass.field_name] = (field_dataclass.field_type, field_info)
             if one_of_dict:
                 model_config_dict = _pydantic_adapter.get_model_config_dict(
