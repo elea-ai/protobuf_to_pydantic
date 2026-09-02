@@ -137,7 +137,7 @@ class OptionalMessage(BaseModel):
     y: int = Field(default=0, alias="yy", title="use age", ge=0.0, example=18)
     name: typing.Optional[str] = Field(default="")
     age: typing.Optional[int] = Field(default=0)
-    item: typing.Optional[InvoiceItem] = Field(default_factory=InvoiceItem)
+    item: typing.Optional[InvoiceItem] = Field(default=None)
     str_list: typing.List[str] = Field(default_factory=list)
     int_map: typing.Dict[str, int] = Field(default_factory=dict)
     default_template_test: float = Field(default=1600000000.0)
@@ -151,7 +151,7 @@ class OtherMessage(BaseModel):
 
     metadata: typing.Dict[str, typing.Any] = Field(default_factory=dict)
     double_value: DoubleValue = Field(default_factory=DoubleValue)
-    field_mask: typing.Optional[FieldMask] = Field(default_factory=FieldMask)
+    field_mask: typing.Optional[FieldMask] = Field(default=None)
 
 
 class RootMessage(BaseModel):

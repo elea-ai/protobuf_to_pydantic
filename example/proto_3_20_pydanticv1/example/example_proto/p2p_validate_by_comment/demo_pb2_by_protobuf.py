@@ -479,7 +479,7 @@ class OneOfTest(BaseModel):
 
 class OptionalMessage(BaseModel):
     my_message1: typing.Optional[MessageIgnoredTest] = Field()
-    my_message2: typing.Optional[MessageIgnoredTest] = Field(default_factory=MessageIgnoredTest)
+    my_message2: typing.Optional[MessageIgnoredTest] = Field(default=None)
     my_message3: MessageIgnoredTest = Field()
     my_message4: MessageIgnoredTest = Field(default_factory=MessageIgnoredTest)
     my_message_5: typing.Optional[MessageIgnoredTest] = Field(default=None)

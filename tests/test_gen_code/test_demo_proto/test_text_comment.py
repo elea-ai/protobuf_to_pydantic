@@ -124,7 +124,7 @@ class UserMessage(BaseModel):
 
             metadata: typing.Dict[str, typing.Any] = Field(default_factory=dict)
             double_value: DoubleValue = Field(default_factory=DoubleValue)
-            field_mask: typing.Optional[FieldMask] = Field(default_factory=FieldMask)
+            field_mask: typing.Optional[FieldMask] = Field(default=None)
         """
         else:
             content = """
@@ -133,7 +133,7 @@ class OtherMessage(BaseModel):
 
     metadata: typing.Dict[str, typing.Any] = Field(default_factory=dict)
     double_value: DoubleValue = Field(default_factory=DoubleValue)
-    field_mask: typing.Optional[FieldMask] = Field(default_factory=FieldMask)
+    field_mask: typing.Optional[FieldMask] = Field(default=None)
 """
         assert format_content(content) in self._model_output(demo_pb2.OtherMessage)
 

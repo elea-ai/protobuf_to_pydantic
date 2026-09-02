@@ -27,7 +27,7 @@ class ReportData(MyBaseSchema):
         "ReportData.data": {"fields": {"locationValue", "location_value", "timeValue", "time_value"}, "required": True}
     }
     one_of_validator = model_validator(mode="before")(check_one_of)
-    location_value: typing.Optional[GeoLocation] = Field(default_factory=GeoLocation)
+    location_value: typing.Optional[GeoLocation] = Field(default=None)
     time_value: datetime = Field(default_factory=datetime.now)
 
 

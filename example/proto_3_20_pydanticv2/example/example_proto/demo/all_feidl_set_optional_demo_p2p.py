@@ -47,7 +47,7 @@ class OtherMessage(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     metadata: typing.Optional[typing.Dict[str, typing.Any]] = Field(default_factory=dict)
     double_value: typing.Optional[DoubleValue] = Field(default_factory=DoubleValue)
-    field_mask: typing.Optional[FieldMask] = Field(default_factory=FieldMask)
+    field_mask: typing.Optional[FieldMask] = Field(default=None)
 
 
 class MapMessage(BaseModel):
@@ -122,7 +122,7 @@ class OptionalMessage(BaseModel):
     y: typing.Optional[int] = Field(default=0, title="use age", ge=0, example=18)
     name: typing.Optional[str] = Field(default="")
     age: typing.Optional[int] = Field(default=0)
-    item: typing.Optional[InvoiceItem] = Field(default_factory=InvoiceItem)
+    item: typing.Optional[InvoiceItem] = Field(default=None)
     str_list: typing.Optional[typing.List[str]] = Field(default_factory=list)
     int_map: typing.Optional["typing.Dict[str, int]"] = Field(default_factory=dict)
     default_template_test: typing.Optional[float] = Field(default=1600000000.0)

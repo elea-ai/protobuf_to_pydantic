@@ -416,6 +416,8 @@ class FileDescriptorProtoToCode(BaseP2C):
                 pass
 
         is_required = field_info_dict.get("required", None)
+        # Before the protobuf defaults are merged in, a default_factory can only come from the field comment.
+        has_comment_default_factory = field_info_dict.get("default_factory", None) is not None
 
         if (
             field_info_dict
@@ -493,15 +495,21 @@ class FileDescriptorProtoToCode(BaseP2C):
             field_info_param_dict_migration_v2_handler(field_info_dict, is_warnings=False)  # type: ignore[arg-type]
 
         # optional handler
-        if optional_dict.get(field.name, {}).get("is_proto3_optional", False) or self.config.all_field_set_optional:
+        is_proto3_optional = optional_dict.get(field.name, {}).get("is_proto3_optional", False)
+        if is_proto3_optional or self.config.all_field_set_optional:
             self._add_import_code("typing")
             type_str = f"typing.Optional[{type_str}]"
             if (
                 is_required is not True
                 and field_info_dict.get("default", _pydantic_adapter.PydanticUndefined)
                 is _pydantic_adapter.PydanticUndefined
-                and not field_info_dict.get("default_factory", None)
+                and (
+                    not field_info_dict.get("default_factory", None)
+                    # A proto3 `optional` message field is absent by default, not an empty message.
+                    or (is_proto3_optional and not has_comment_default_factory)
+                )
             ):
+                field_info_dict.pop("default_factory", None)
                 field_info_dict["default"] = None
 
         # arranging  field info parameters

@@ -105,6 +105,9 @@ class FieldDataClass(object):
     nested_message_dict: Dict[str, Type[Union[BaseModel, IntEnum]]]
     descriptor: Descriptor
     validators: Dict[str, classmethod]
+    is_proto3_optional: bool = False
+    # A default_factory declared in the field comment, as opposed to the protobuf message default.
+    has_comment_default_factory: bool = False
 
 
 CREATE_MODEL_CACHE_T = Dict[Union[str, tuple], Optional[Type[BaseModel]]]
@@ -475,6 +478,7 @@ class M2P(object):
             is_required = field_info_dict.get("required", None)
             if is_required:
                 field_dataclass.is_required = is_required
+            field_dataclass.has_comment_default_factory = field_info_dict.get("default_factory", None) is not None
 
             # Nested types do not include the `enable`, `field` and `validator`  attributes
             if not field_info_dict.pop("enable"):
@@ -549,6 +553,17 @@ class M2P(object):
             if not field_info_dict.get(remove_key, True):  # type: ignore[misc]
                 field_info_dict.pop(remove_key)  # type: ignore[misc]
 
+        if (
+            field_dataclass.is_proto3_optional
+            and field_dataclass.is_required is not True
+            and not field_dataclass.has_comment_default_factory
+            and field_info_dict.get("default", _pydantic_adapter.PydanticUndefined) is _pydantic_adapter.PydanticUndefined
+            and field_info_dict.get("default_factory", None) is not None
+        ):
+            # A proto3 `optional` message field is absent by default, not an empty message.
+            field_info_dict.pop("default_factory")
+            field_info_dict["default"] = None
+
         return field_class(**field_info_dict)  # type: ignore
 
     def _parse_msg_to_pydantic_model(
@@ -592,6 +607,7 @@ class M2P(object):
                 nested_message_dict=nested_message_dict,
                 descriptor=descriptor,
                 validators=validators,
+                is_proto3_optional=optional_dict.get(protobuf_field.full_name, {}).get("is_proto3_optional", False),
             )
             if protobuf_field.type == FieldDescriptor.TYPE_MESSAGE:
                 self._protobuf_field_type_is_type_message_handler(field_dataclass)
@@ -607,8 +623,7 @@ class M2P(object):
             if not field_info:
                 continue
 
-            is_proto3_optional = optional_dict.get(protobuf_field.full_name, {}).get("is_proto3_optional", False)
-            if is_proto3_optional or self._all_field_set_optional:
+            if field_dataclass.is_proto3_optional or self._all_field_set_optional:
                 field_dataclass.field_type = Optional[field_dataclass.field_type]
                 if (
                     field_dataclass.is_required is not True
