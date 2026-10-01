@@ -769,7 +769,7 @@ class OptionalMessage(BaseModel):
     # fix https://github.com/so1n/protobuf_to_pydantic/issues/82
     my_message1: typing.Optional[MessageIgnoredTest] = Field()
     # fix https://github.com/so1n/protobuf_to_pydantic/issues/85
-    my_message2: typing.Optional[MessageIgnoredTest] = Field(default_factory=MessageIgnoredTest)
+    my_message2: typing.Optional[MessageIgnoredTest] = Field(default=None)
     my_message3: MessageIgnoredTest = Field()
     my_message4: MessageIgnoredTest = Field(default_factory=MessageIgnoredTest)
     my_message_5: typing.Optional[MessageIgnoredTest] = Field(default=None)
